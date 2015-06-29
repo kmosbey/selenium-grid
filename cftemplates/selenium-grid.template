@@ -1,0 +1,74 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Template for Selenium hub/nodes",
+    "Parameters": {
+        "amiID": {
+            "Description": "The new ami id from packer",
+            "Type": "String"
+        },
+        "HubCapacity": {
+            "Default": "1",
+            "Description": "The initial number of Hub instances",
+            "Type": "Number",
+            "MinValue": "1",
+            "MaxValue": "1",
+            "ConstraintDescription": "must be 1 EC2 instance."
+        }
+        "NodeCapacity": {
+            "Default": "1",
+            "Description": "The initial number of Node instances",
+            "Type": "Number",
+            "MinValue": "1",
+            "MaxValue": "3",
+            "ConstraintDescription": "must be between 1 and 3 EC2 instances."
+        }
+    },
+    "Resources": {
+        "HubAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": { 
+                "AvailabilityZones": [ "us-west-2a" ],
+                "LaunchConfigurationName": { "Ref": "HubLaunchConfig" },
+                "MinSize": "1",
+                "MaxSize": "1",
+                "DesiredCapacity": { "Ref": "HubCapacity" },
+                "VPCZoneIdentifier": [ "subnet-1221b377" ]
+            }
+        },
+        "HubLaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "ImageId": { "Ref": "amiID" },
+                "InstanceType": "t2.micro",
+                "KeyName": "kmosbey",
+                "SecurityGroups": [ "sg-81a0ace4", "sg-0fbfb36a" ]
+            }
+        }
+        "NodeAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": { 
+                "AvailabilityZones": [ "us-west-2a" ],
+                "LaunchConfigurationName": { "Ref": "NodeLaunchConfig" },
+                "MinSize": "1",
+                "MaxSize": "1",
+                "DesiredCapacity": { "Ref": "NodeCapacity" },
+                "VPCZoneIdentifier": [ "subnet-1221b377" ]
+            }
+        },
+        "NodeLaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "ImageId": { "Ref": "amiID" },
+                "InstanceType": "t2.micro",
+                "KeyName": "kmosbey",
+                "SecurityGroups": [ "sg-81a0ace4", "sg-0fbfb36a" ]
+            }
+        }
+    },
+    "Outputs" : {
+        "URL" : {
+            "Description" : "The URL of your website",
+            "Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]}]]}
+        }
+    }
+}
